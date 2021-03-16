@@ -49,3 +49,26 @@ func (w *writer) Write(buf []byte) (int, error) {
 	w.bucket.Wait(int64(len(buf)))
 	return w.w.Write(buf)
 }
+
+type writeCloser struct {
+	w      io.WriteCloser
+	bucket *Bucket
+}
+
+// WriteCloser works just like Writer, except that the returned
+// stream can also be closed.
+func WriteCloser(w io.WriteCloser, bucket *Bucket) io.WriteCloser {
+	return &writeCloser{
+		w:      w,
+		bucket: bucket,
+	}
+}
+
+func (w *writeCloser) Write(buf []byte) (int, error) {
+	w.bucket.Wait(int64(len(buf)))
+	return w.w.Write(buf)
+}
+
+func (w *writeCloser) Close() (error) {
+	return w.w.Close()
+}
